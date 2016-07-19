@@ -7,4 +7,4 @@ export WINEPREFIX=/app/wine-root
     'c:\\Program Files (x86)\\DTN\\IQFeed\\iqconnect.exe' \
     -autoconnect &
 
-node proxy.js
+nodejs proxy.js

@@ -1,36 +1,6 @@
 Dockerized IQFeed client
 =======================
 
-Usage
------
-
-```
-docker run -e LOGIN=<your iqfeed login> -e PASSWORD=<your iqfeed password> -p 5009:5010 -p 9100:9101 bratchenko/iqfeed
-```
-
-You should see out put like this:
-```
-Connecting to port  9300
-Disconnected. Reconnecting in 1 second.
-Connecting to port  9300
-Disconnected. Reconnecting in 1 second.
-fixme:thread:GetThreadPreferredUILanguages 52, 0x32fac4, 0x32fb34 0x32facc
-fixme:heap:HeapSetInformation (nil) 1 (nil) 0
-fixme:thread:GetThreadPreferredUILanguages 52, 0x32f880, 0x32f8f0 0x32f888
-```
-
-That's totally ok.
-
-Wait until you start seeing log lines that have word "Connected" in them. They should look like this:
-
-```
-S,STATS,66.112.148.223,60002,500,0,1,0,5,0,Aug 20 2:42PM,Aug 20 2:42PM,Connected,5.1.1.0,416828,0.55,0.02,0.03,3.94,0.11,0.18,
-```
-
-Here you go, now you should be able to connect to ports 5009 or 9100 to the current machine as if you're connecting to an IQFeed client.
-
-If you don't start seeing "Connected" lines in about 1 minute, then you probably entered login or password incorrectly. Unfortunately, IQFeed doesn't say anything about it, just doesn't connect.
-
 Details
 -------
 
@@ -60,14 +30,14 @@ Idea and Makefile are borrowed from https://github.com/macdice/iqfeed-debian.
 apt-get install -y software-properties-common
 add-apt-repository -y ppa:ubuntu-wine/ppa
 apt-get update
-apt-get -y install wine1.7
+apt-get -y install wine1.8
 ```
 
-2. You need a GUI for this to work, so if you're doing it on server, [install vncserver](http://www.howtoforge.com/how-to-install-vnc-server-on-ubuntu-14.04).
+2. You need a GUI for this to work, so if you're doing it on server, [install vncserver](http://www.howtoforge.com/how-to-install-vnc-server-on-ubuntu-14.04). Alternatively, if sshing into VM, [download Xquartz](https://www.xquartz.org ) and continue below.  
 
 3. Run `make fetch` in this folder to download IQFeed Client installation file. You can change IQFeed Client version at the top of Makefile.
 
-4. Launch GUI.
+4. Launch GUI (launches automatically in step 6 if using XQuartz).
 
 5. Run `make install`. Don't change default settings.
 
@@ -85,4 +55,60 @@ apt-get -y install wine1.7
 
 You can run it now: `docker run -e LOGIN=login -e PASSWORD=password iqfeed`.
 
-For transferring image between machines, you can use http://hub.docker.com. For example, if your account on Docker Hub is "bratchenko", you should run `docker build -t bratchenko/iqfeed .`, then `docker push bratchenko/iqfeed`. Then on the target machine, run `docker pull bratchenko/iqfeed` and `docker run --net="host" bratchenko/iqfeed`.
+Running Container on a Different Machine
+----------------------------------------
+
+For transferring images without using docker registry: 
+
+Build and export the image 
+
+1. `docker build -t ncllc/iqfeed`
+
+2. `docker export ncllc/iqfeed > /desired-path-to-file/ncllc_iqfeed.tar`
+
+3. navigate to your desired path on target machine and run `rsync -avz --partial --progress machinelogin@hostname:/tmp/ncllc_iqfeed.tar .` 
+
+Load the image and run the container
+
+4. `docker load < /path-to-file/ncllc_iqfeed.tar` 
+
+5. Image should appear in registry `docker images`
+
+6. `docker run -d --name feed -p 5009:5010 -p 9100:9101 ncllc/iqfeed`. 
+
+7. Listen on the correct port `telnet localhost 9100`.
+
+
+For transferring image between machines using public registry:  you can use http://hub.docker.com. For example, if your account on Docker Hub is "ncllc", you should run `docker build -t ncllc/iqfeed .`, then `docker push ncllc/iqfeed`. Then on the target machine, run `docker pull ncllc/iqfeed` and `docker run --net="host" ncllc/iqfeed`.
+
+Usage
+-----
+
+```
+docker run -e LOGIN=<your iqfeed login> -e PASSWORD=<your iqfeed password> -p 5009:5010 -p 9100:9101 ncllc/iqfeed
+```
+
+You should see out put like this:
+```
+Connecting to port  9300
+Disconnected. Reconnecting in 1 second.
+Connecting to port  9300
+Disconnected. Reconnecting in 1 second.
+fixme:thread:GetThreadPreferredUILanguages 52, 0x32fac4, 0x32fb34 0x32facc
+fixme:heap:HeapSetInformation (nil) 1 (nil) 0
+fixme:thread:GetThreadPreferredUILanguages 52, 0x32f880, 0x32f8f0 0x32f888
+```
+
+That's totally ok.
+
+Wait until you start seeing log lines that have word "Connected" in them. They should look like this:
+
+```
+S,STATS,66.112.148.223,60002,500,0,1,0,5,0,Aug 20 2:42PM,Aug 20 2:42PM,Connected,5.1.1.0,416828,0.55,0.02,0.03,3.94,0.11,0.18,
+```
+
+Here you go, now you should be able to connect to ports 5009 or 9100 to the current machine as if you're connecting to an IQFeed client.
+
+If you don't start seeing "Connected" lines in about 1 minute, then you probably entered login or password incorrectly. Unfortunately, IQFeed doesn't say anything about it, just doesn't connect.
+
+

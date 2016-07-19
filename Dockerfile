@@ -1,11 +1,11 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 RUN dpkg --add-architecture i386
 
 RUN apt-get update
 RUN apt-get -y install software-properties-common
 
-RUN add-apt-repository -y ppa:ubuntu-wine/ppa && add-apt-repository -y ppa:chris-lea/node.js && apt-get update && apt-get -y install wine1.7 nodejs xvfb
+RUN add-apt-repository -y ppa:ubuntu-wine/ppa && apt-get update && apt-get -y install wine1.8 nodejs xvfb
 
 ADD . /app
 
